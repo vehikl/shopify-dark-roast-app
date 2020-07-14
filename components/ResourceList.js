@@ -11,8 +11,6 @@ import store from 'store-js';
 import { Redirect } from '@shopify/app-bridge/actions';
 import { Context } from '@shopify/app-bridge-react';
 
-import * as PropTypes from 'prop-types';
-
 const GET_ALL_PRODUCTS = gql`
   query getProducts {
     products(first: 10) {
@@ -22,6 +20,9 @@ const GET_ALL_PRODUCTS = gql`
           handle
           descriptionHtml
           id
+          metafield(namespace: "coffee", key: "cost_per_month") {
+            value
+          }
           images(first: 1) {
             edges {
               node {
@@ -30,11 +31,15 @@ const GET_ALL_PRODUCTS = gql`
               }
             }
           }
-          variants(first: 1) {
+          variants(first: 10) {
             edges {
               node {
                 price
                 id
+                title
+                metafield(namespace: "coffee", key: "cost_per_month") {
+                  value
+                }
               }
             }
           }
@@ -49,7 +54,7 @@ class ResourceListWithProducts extends React.Component {
 
   render() {
     const app = this.context;
-    const redirectToProduct = () => {
+    const redirectToProductVariant = () => {
       const redirect = Redirect.create(app);
       redirect.dispatch(
         Redirect.Action.APP,
@@ -57,7 +62,6 @@ class ResourceListWithProducts extends React.Component {
       );
     };
 
-    const twoWeeksFromNow = new Date(Date.now() + 12096e5).toDateString();
     return (
       <Query query={GET_ALL_PRODUCTS}>
         {({ data, loading, error }) => {
@@ -85,17 +89,10 @@ class ResourceListWithProducts extends React.Component {
                       }
                     />
                   );
-                  const price = item.node.variants.edges[0].node.price;
                   return (
                     <ResourceList.Item
                       id={item.node.id}
                       media={media}
-                      accessibilityLabel={`View details for ${item.node.title}`}
-                      onClick={() => {
-                        store.set('item', item.node);
-                        redirectToProduct();
-                      }
-                      }
                     >
                       <Stack>
                         <Stack.Item fill>
@@ -106,10 +103,37 @@ class ResourceListWithProducts extends React.Component {
                           </h3>
                         </Stack.Item>
                         <Stack.Item>
-                          <p>${price}</p>
-                        </Stack.Item>
-                        <Stack.Item>
-                          <p>Expires on {twoWeeksFromNow} </p>
+                          <ResourceList
+                              showHeader
+                              resourceName={{ singular: 'Product', plural: 'Products' }}
+                              items={item.node.variants.edges}
+                              renderItem={(item) => {
+                                return (
+                                    <ResourceList.Item
+                                        id={item.node.id}
+                                        accessibilityLabel={`View details for ${item.node.title}`}
+                                        onClick={() => {
+                                          store.set('item', item.node);
+                                          redirectToProductVariant();
+                                        }
+                                        }
+                                    >
+                                      <Stack>
+                                        <Stack.Item fill>
+                                          <h3>
+                                            <TextStyle variation="strong">
+                                              {item.node.title}
+                                            </TextStyle>
+                                          </h3>
+                                        </Stack.Item>
+                                        <Stack.Item>
+                                          <p>${item.node.price}</p>
+                                        </Stack.Item>
+                                      </Stack>
+                                    </ResourceList.Item>
+                                );
+                              }}
+                            />
                         </Stack.Item>
                       </Stack>
                     </ResourceList.Item>
