@@ -116,12 +116,12 @@ class EditProduct extends React.Component {
 
   itemToBeConsumed = () => {
     const item = store.get('item');
-    // TODO: Modify this to fetch value(s) of metafield(s) and return
     return {
       parentTitle: item.parentTitle,
       variantId: item.id,
       name: item.title,
-      costPerMonth: ''
+      // We're assuming there's just one meta field in the coffee namespace now, switch to a .find or something :)
+      costPerMonth: item.privateMetafields.edges[0].node.value
     };
   };
 }

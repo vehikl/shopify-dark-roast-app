@@ -20,9 +20,6 @@ const GET_ALL_PRODUCTS = gql`
           handle
           descriptionHtml
           id
-          metafield(namespace: "coffee", key: "cost_per_month") {
-            value
-          }
           images(first: 1) {
             edges {
               node {
@@ -37,8 +34,15 @@ const GET_ALL_PRODUCTS = gql`
                 price
                 id
                 title
-                metafield(namespace: "coffee", key: "cost_per_month") {
-                  value
+                privateMetafields(namespace: "coffee", first: 1) {
+                    edges {
+                     node {
+                      id
+                      namespace
+                      key
+                      value
+                    }
+                  }
                 }
               }
             }
