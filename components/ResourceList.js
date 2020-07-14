@@ -89,6 +89,7 @@ class ResourceListWithProducts extends React.Component {
                       }
                     />
                   );
+                  const parentTitle = item.node.title;
                   return (
                     <ResourceList.Item
                       id={item.node.id}
@@ -98,7 +99,7 @@ class ResourceListWithProducts extends React.Component {
                         <Stack.Item fill>
                           <h3>
                             <TextStyle variation="strong">
-                              {item.node.title}
+                              {parentTitle}
                             </TextStyle>
                           </h3>
                         </Stack.Item>
@@ -113,7 +114,7 @@ class ResourceListWithProducts extends React.Component {
                                         id={item.node.id}
                                         accessibilityLabel={`View details for ${item.node.title}`}
                                         onClick={() => {
-                                          store.set('item', item.node);
+                                          store.set('item', {...item.node, parentTitle});
                                           redirectToProductVariant();
                                         }
                                         }

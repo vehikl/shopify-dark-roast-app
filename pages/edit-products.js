@@ -15,37 +15,35 @@ import store from 'store-js';
 import gql from 'graphql-tag';
 import { Mutation } from 'react-apollo';
 
-const UPDATE_PRICE = gql`
- mutation productVariantUpdate($input: ProductVariantInput!) {
-   productVariantUpdate(input: $input) {
-     product {
-       title
-     }
-     productVariant {
-       id
-       price
-     }
-   }
- }
+const UPDATE_METAFIELD = gql`
+ mutation($input: PrivateMetafieldInput!) {
+  privateMetafieldUpsert(input: $input) {
+    privateMetafield {
+      namespace
+      key
+      value
+    }
+  }
+}
 `;
 
 class EditProduct extends React.Component {
   state = {
-    discount: '',
-    price: '',
+    parentTitle: '',
+    costPerMonth: '',
     variantId: '',
     showToast: false,
   };
 
   componentDidMount() {
-    this.setState({ discount: this.itemToBeConsumed() });
+    this.setState(this.itemToBeConsumed());
   }
 
   render() {
-    const { name, price, discount, variantId } = this.state;
+    const { name, parentTitle, variantId, costPerMonth } = this.state;
     return (
       <Mutation
-        mutation={UPDATE_PRICE}
+        mutation={UPDATE_METAFIELD}
       >
         {(handleSubmit, { error, data }) => {
           const showError = error && (
@@ -66,29 +64,18 @@ class EditProduct extends React.Component {
                     {showError}
                   </Layout.Section>
                   <Layout.Section>
-                    <DisplayText size="large">{name}</DisplayText>
+                    <DisplayText size="large">{parentTitle}: {name}</DisplayText>
                     <Form>
                       <Card sectioned>
                         <FormLayout>
                           <FormLayout.Group>
                             <TextField
-                              prefix="$"
-                              value={price}
-                              disabled
-                              label="Original price"
+                              value={costPerMonth}
+                              label="Cost Per Month"
                               type="price"
-                            />
-                            <TextField
-                              prefix="$"
-                              value={discount}
-                              onChange={this.handleChange('discount')}
-                              label="Discounted price"
-                              type="discount"
+                              onChange={this.handleChange('costPerMonth')}
                             />
                           </FormLayout.Group>
-                          <p>
-                            This sale price will expire in two weeks
-                        </p>
                         </FormLayout>
                       </Card>
                       <PageActions
@@ -97,18 +84,18 @@ class EditProduct extends React.Component {
                             content: 'Save',
                             onAction: () => {
                               const productVariableInput = {
-                                id: variantId,
-                                price: discount,
+                                owner: variantId,
+                                namespace: "coffee",
+                                key: "cost_per_month",
+                                valueInput: {
+                                  value: costPerMonth,
+                                  valueType: "STRING"
+                                }
                               };
                               handleSubmit({
                                 variables: { input: productVariableInput },
                               });
                             },
-                          },
-                        ]}
-                        secondaryActions={[
-                          {
-                            content: 'Remove discount',
                           },
                         ]}
                       />
@@ -129,11 +116,13 @@ class EditProduct extends React.Component {
 
   itemToBeConsumed = () => {
     const item = store.get('item');
-    const price = item.variants.edges[0].node.price;
-    const variantId = item.variants.edges[0].node.id;
-    const discounter = price * 0.1;
-    this.setState({ price, variantId });
-    return (price - discounter).toFixed(2);
+    // TODO: Modify this to fetch value(s) of metafield(s) and return
+    return {
+      parentTitle: item.parentTitle,
+      variantId: item.id,
+      name: item.title,
+      costPerMonth: ''
+    };
   };
 }
 
